@@ -15,5 +15,11 @@ public class BookConverter {
         return bookDto;
     }
 
-
+    public Book convert(BookDto bookDto){
+        Book book = new Book();
+        book.setId(bookDto.getId());
+        book.setAuthor(bookDto.getAuthor());
+        book.setTitle(bookDto.getTitle());
+        return book;
+    }
 }
