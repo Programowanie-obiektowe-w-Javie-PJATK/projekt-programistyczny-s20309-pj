@@ -1,20 +1,13 @@
 package pl.edu.pjwstk.poj.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import pl.edu.pjwstk.poj.dto.BookDto;
-import pl.edu.pjwstk.poj.exception.ErrorResponse;
 import pl.edu.pjwstk.poj.service.BookService;
 
-import java.net.URI;
-import java.util.List;
-import java.util.Optional;
-
-@RestController
-@RequestMapping("api/books")
+@Controller
 public class BookController {
 
     private final BookService bookService;
@@ -25,56 +18,55 @@ public class BookController {
     }
 
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getOneById(@PathVariable(value = "id") Long id) {
-        Optional<BookDto> book = bookService.getBookById(id);
-        if (book.isPresent()) {
-            return new ResponseEntity<>(book.get(), HttpStatus.OK);
+    @GetMapping("/books")
+    public String saveBook(Model model) {
+        model.addAttribute("book", new BookDto());
+        model.addAttribute("books", bookService.findAll());
+        return "books";
+    }
+
+
+    @RequestMapping("book/{id}")
+    public String showBooks(@PathVariable Long id, Model model) {
+        bookService.getBookById(id).ifPresent(o -> model.addAttribute("book", o)); //unwrap an Optional
+        return "bookshow";
+    }
+
+
+    @PostMapping("/book/update")
+    public String updateBook(@ModelAttribute("editBook") BookDto editBook) {
+        if (bookService.saveBook(editBook) != null) {
+
         }
-        return new ResponseEntity<>(new ErrorResponse("The book was not found", 404), HttpStatus.NOT_FOUND);
-    }
-
-    @PostMapping("/books")
-    public ResponseEntity<?> save(@RequestBody BookDto book){
-        BookDto savedBook = bookService.saveBook(book);
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
-                .buildAndExpand(savedBook.getId()).toUri();
-        return ResponseEntity.created(location).build();
+        return "redirect:/books";
     }
 
 
+    @PostMapping("/book/add")
+    public String addBook(@ModelAttribute("addBook") BookDto addBook) {
+        if (bookService.saveBook(addBook) != null) {
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<?> update(@RequestBody BookDto book, @PathVariable Long id){
-
-        Optional<BookDto> bookToUpdate = Optional.ofNullable(bookService.getBookById(book.getId()).map(newBook -> {
-            book.setAuthor(book.getAuthor());
-            book.setTitle(book.getTitle());
-            return bookService.saveBook(book);
-        })
-                .orElseGet(() -> {
-                    book.setId(id);
-                    return bookService.saveBook(book);
-                }));
-        return new ResponseEntity<>(bookToUpdate, HttpStatus.OK);
-
-    }
-
-
-    @GetMapping
-    public ResponseEntity<List<BookDto>> getAll() {
-        return new ResponseEntity<>(bookService.findAll(), HttpStatus.OK);
-    }
-
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id){
-        Optional<BookDto> book = bookService.getBookById(id);
-        if (book.isPresent()) {
-            bookService.delete(id);
-            return ResponseEntity.noContent().build();
         }
-        return new ResponseEntity(new ErrorResponse("The book was not found", 404), HttpStatus.NOT_FOUND);
+        return "redirect:/books";
 
+    }
+
+
+    @RequestMapping("book/edit/{id}")
+    public String editBook(@PathVariable Long id, Model model) {
+        if (bookService.getBookById(id) != null) {
+            model.addAttribute("editBook", bookService.getBookById(id));
+            return "bookform";
+        }
+        return "redirect:/books";
+
+    }
+
+
+    @RequestMapping("book/delete/{id}")
+    public String delete(@PathVariable Long id) {
+        bookService.delete(id);
+        return "redirect:/books";
     }
 
 }

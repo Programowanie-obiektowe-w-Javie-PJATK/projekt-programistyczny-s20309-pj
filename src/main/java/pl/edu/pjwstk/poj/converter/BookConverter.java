@@ -7,7 +7,7 @@ import pl.edu.pjwstk.poj.entity.Book;
 @Component
 public class BookConverter {
 
-    public BookDto convert(Book book){
+    public BookDto convert(Book book) {
         BookDto bookDto = new BookDto();
         bookDto.setId(book.getId());
         bookDto.setAuthor(book.getAuthor());
@@ -15,7 +15,7 @@ public class BookConverter {
         return bookDto;
     }
 
-    public Book convert(BookDto bookDto){
+    public Book convert(BookDto bookDto) {
         Book book = new Book();
         book.setId(bookDto.getId());
         book.setAuthor(bookDto.getAuthor());
